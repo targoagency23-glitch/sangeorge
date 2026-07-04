@@ -1,0 +1,53 @@
+{
+  "entities": {
+    "CompanyConfig": {
+      "title": "CompanyConfig",
+      "description": "Full configuration for San George Co setup including branches, brands, and offers.",
+      "type": "object",
+      "properties": {
+        "companyNameEn": {
+          "type": "string",
+          "description": "Company name in English"
+        },
+        "companyNameAr": {
+          "type": "string",
+          "description": "Company name in Arabic"
+        },
+        "taglineEn": {
+          "type": "string",
+          "description": "Slogan in English"
+        },
+        "taglineAr": {
+          "type": "string",
+          "description": "Slogan in Arabic"
+        },
+        "logoUrl": {
+          "type": "string",
+          "description": "Custom logo URL"
+        },
+        "aboutTextEn": {
+          "type": "string",
+          "description": "About section in English"
+        },
+        "aboutTextAr": {
+          "type": "string",
+          "description": "About section in Arabic"
+        },
+        "contactPhone": {
+          "type": "string",
+          "description": "Main contact phone number"
+        }
+      },
+      "required": [
+        "companyNameEn",
+        "companyNameAr"
+      ]
+    }
+  },
+  "firestore": {
+    "/configs/{configId}": {
+      "schema": "CompanyConfig",
+      "description": "Configuration record for the application."
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "San George Co.",
+  "description": "A web application for San George Co. in Suez containing a dynamic client landing page and an integrated administrative dashboard to manage company details, branches, and authorized brands.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
