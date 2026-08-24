@@ -391,7 +391,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ config, lang, onSave, 
     setLocalConfig((prev) => ({ ...prev, testimonials: (prev.testimonials || []).filter((t) => t.id !== id) }));
   };
 
-  // 🔥 THE IMGBB MEDIA UPLOAD LOGIC (REPLACED FIREBASE STORAGE) 🔥
+  // 🔥 THE CLOUDINARY MEDIA UPLOAD LOGIC (ULTRA FAST) 🔥
   const compressConfigImages = async (configData: CompanyConfig): Promise<CompanyConfig> => {
     const next = { ...configData };
 
@@ -404,24 +404,23 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ config, lang, onSave, 
         // نضغط الصورة الأول باستخدام الكود القديم لتقليل الحجم
         const compressedBase64 = await compressBase64(imgUrl, width, height, 0.75);
         
-        // فصل الكود الأساسي للصورة عن المقدمة (data:image/jpeg;base64,) عشان ImgBB يقبلها
-        const base64Data = compressedBase64.split(',')[1];
-        
         const formData = new FormData();
-        formData.append("image", base64Data);
+        // Cloudinary بيقبل الصورة كاملة بصيغة Data URI
+        formData.append("file", compressedBase64);
+        formData.append("upload_preset", "ml_default");
 
-        // رفع الصورة المباشر على سيرفرات ImgBB المجانية بالمفتاح السري بتاعك
-        const uploadRes = await fetch("https://api.imgbb.com/1/upload?key=28498bca0aefafc5b4024ddfd0aec54d", {
+        // رفع الصورة المباشر على سيرفرات Cloudinary السريعة جداً
+        const uploadRes = await fetch("https://api.cloudinary.com/v1_1/dgvcqy3vt/image/upload", {
             method: "POST",
             body: formData
         });
 
         const imgData = await uploadRes.json();
 
-        if (imgData.success) {
-            return imgData.data.url; // نرجع بالرابط المباشر الصغير للصورة
+        if (imgData.secure_url) {
+            return imgData.secure_url; // نرجع بالرابط المباشر السريع للصورة
         } else {
-            console.error("ImgBB Upload Error:", imgData);
+            console.error("Cloudinary Upload Error:", imgData);
             // في حالة فشل الرفع لأي سبب، نرجع الصورة كنص مضغوط كحل بديل عشان الموقع ميوقفش
             return compressedBase64;
         }
