@@ -1,12 +1,23 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
-import firebaseConfig from '../firebase-applet-config.json';
+import { getStorage } from 'firebase/storage';
+
+// تم وضع إعدادات مشروعك الجديد مباشرة لتخطي الملف القديم
+const firebaseConfig = {
+  apiKey: "AIzaSyAPUcTuxMbEARGkFNkFlCnw3vZ5BiS6Bg4",
+  authDomain: "san-george-app.firebaseapp.com",
+  projectId: "san-george-app",
+  storageBucket: "san-george-app.firebasestorage.app",
+  messagingSenderId: "835483712480",
+  appId: "1:835483712480:web:7a315c12c480b3b15d4985"
+};
 
 const app = initializeApp(firebaseConfig);
 const dbId = (firebaseConfig as any).firestoreDatabaseId;
 export const db = dbId ? getFirestore(app, dbId) : getFirestore(app); /* CRITICAL: The app will break without this line */
 export const auth = getAuth();
+export const storage = getStorage(app); // تم تفعيل التخزين السحابي للصور هنا
 
 export enum OperationType {
   CREATE = 'create',
