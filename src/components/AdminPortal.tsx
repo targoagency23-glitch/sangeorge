@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { CompanyConfig, Branch, BrandItem, SpecialOffer, Testimonial, getCleanWhatsappNumber } from "../types";
 import { Globe, Save, RefreshCw, Plus, Trash2, ArrowLeft, Download, Eye, FileText, FolderOpen } from "lucide-react";
 import { MediaManager, MediaPickerField, compressBase64 } from "./MediaLibrary";
-import { getStorage, ref, uploadString, getDownloadURL } from "firebase/storage";
 
 interface AdminPortalProps {
   config: CompanyConfig;
@@ -392,7 +391,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ config, lang, onSave, 
     setLocalConfig((prev) => ({ ...prev, testimonials: (prev.testimonials || []).filter((t) => t.id !== id) }));
   };
 
-  // 🔥 THE NEW FIREBASE STORAGE UPLOAD LOGIC 🔥
+  // 🔥 THE IMGBB MEDIA UPLOAD LOGIC (REPLACED FIREBASE STORAGE) 🔥
   const compressConfigImages = async (configData: CompanyConfig): Promise<CompanyConfig> => {
     const next = { ...configData };
 
@@ -404,17 +403,30 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ config, lang, onSave, 
       try {
         // نضغط الصورة الأول باستخدام الكود القديم لتقليل الحجم
         const compressedBase64 = await compressBase64(imgUrl, width, height, 0.75);
+        
+        // فصل الكود الأساسي للصورة عن المقدمة (data:image/jpeg;base64,) عشان ImgBB يقبلها
+        const base64Data = compressedBase64.split(',')[1];
+        
+        const formData = new FormData();
+        formData.append("image", base64Data);
 
-        // نرفع الصورة المضغوطة على Firebase Storage
-        const storage = getStorage();
-        const storageRef = ref(storage, `sangeorge_media/${pathPrefix}_${Date.now()}`);
-        await uploadString(storageRef, compressedBase64, 'data_url');
+        // رفع الصورة المباشر على سيرفرات ImgBB المجانية بالمفتاح السري بتاعك
+        const uploadRes = await fetch("https://api.imgbb.com/1/upload?key=28498bca0aefafc5b4024ddfd0aec54d", {
+            method: "POST",
+            body: formData
+        });
 
-        // نرجع بالرابط المباشر الصغير للصورة
-        return await getDownloadURL(storageRef);
+        const imgData = await uploadRes.json();
+
+        if (imgData.success) {
+            return imgData.data.url; // نرجع بالرابط المباشر الصغير للصورة
+        } else {
+            console.error("ImgBB Upload Error:", imgData);
+            // في حالة فشل الرفع لأي سبب، نرجع الصورة كنص مضغوط كحل بديل عشان الموقع ميوقفش
+            return compressedBase64;
+        }
       } catch (error) {
-        console.error("Storage upload failed, falling back to base64:", error);
-        // في حالة فشل الرفع، نرجع الصورة مضغوطة بالنظام القديم
+        console.error("Network Error:", error);
         return await compressBase64(imgUrl, width, height, 0.75);
       }
     };
@@ -490,8 +502,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ config, lang, onSave, 
     } catch (err: any) {
       console.error("Save error: ", err);
       let errMsgFriendly = lang === "ar"
-        ? "فشل في حفظ البيانات. يرجى التحقق من اتصالك بالإنترنت وتفعيل (Storage) في الفايربيز."
-        : "Failed to save configuration. Please verify Storage is enabled in Firebase.";
+        ? "فشل في حفظ البيانات. يرجى التحقق من اتصالك بالإنترنت."
+        : "Failed to save configuration. Please verify your internet connection.";
       setErrorMsg(errMsgFriendly);
     } finally {
       setIsSaving(false);
