@@ -398,8 +398,9 @@ export default function App() {
                           <h5 className={`font-bold text-slate-950 text-base ${lang === "en" ? "text-left font-display" : "text-right font-Cairo"}`}>
                             {lang === "en" ? "Samsung" : "سامسونج"}
                           </h5>
+                          {/* 🔥 التعديل هنا: سحب المواعيد الديناميكية لسامسونج 🔥 */}
                           <span className={`block text-[11px] text-slate-400 font-medium mt-0.5 mb-4 ${lang === "en" ? "text-left font-sans" : "text-right font-Cairo"}`}>
-                            {lang === "en" ? "Phone • Location • Social handles" : "الرقم • الموقع • وسائل التواصل"}
+                            {lang === "en" ? (config.samsungWorkingHoursEn || "Phone • Location • Social handles") : (config.samsungWorkingHoursAr || "الرقم • الموقع • وسائل التواصل")}
                           </span>
                         </div>
                         <span className={`text-xs font-bold text-[#172995] flex items-center gap-1.5 mt-auto uppercase tracking-wider ${lang === "en" ? "justify-start text-left" : "justify-end text-right"}`}>
@@ -433,8 +434,9 @@ export default function App() {
                           <h5 className={`font-bold text-slate-950 text-base ${lang === "en" ? "text-left font-display" : "text-right font-Cairo"}`}>
                             {lang === "en" ? "Beko" : "بيكو"}
                           </h5>
+                          {/* 🔥 التعديل هنا: سحب المواعيد الديناميكية لبيكو 🔥 */}
                           <span className={`block text-[11px] text-slate-400 font-medium mt-0.5 mb-2 ${lang === "en" ? "text-left font-sans" : "text-right font-Cairo"}`}>
-                            {lang === "en" ? "Phone • Location • Social handles" : "الرقم • الموقع • وسائل التواصل"}
+                            {lang === "en" ? (config.bekoWorkingHoursEn || "Phone • Location • Social handles") : (config.bekoWorkingHoursAr || "الرقم • الموقع • وسائل التواصل")}
                           </span>
                         </div>
                         <span className={`text-xs font-bold text-[#172995] flex items-center gap-1.5 mt-auto uppercase tracking-wider ${lang === "en" ? "justify-start text-left" : "justify-end text-right"}`}>
@@ -468,8 +470,9 @@ export default function App() {
                           <h5 className={`font-bold text-slate-950 text-base ${lang === "en" ? "text-left font-display" : "text-right font-Cairo"}`}>
                             {lang === "en" ? (config.buttons.midea?.labelEn || "San George") : (config.buttons.midea?.labelAr || "سان جورج")}
                           </h5>
+                          {/* 🔥 التعديل هنا: سحب المواعيد الديناميكية لسان جورج 🔥 */}
                           <span className={`block text-[11px] text-slate-400 font-medium mt-0.5 mb-2 ${lang === "en" ? "text-left font-sans" : "text-right font-Cairo"}`}>
-                            {lang === "en" ? "Phone • Location • Social handles" : "الرقم • الموقع • وسائل التواصل"}
+                            {lang === "en" ? (config.mideaWorkingHoursEn || "Phone • Location • Social handles") : (config.mideaWorkingHoursAr || "الرقم • الموقع • وسائل التواصل")}
                           </span>
                         </div>
                         <span className={`text-xs font-bold text-[#172995] flex items-center gap-1.5 mt-auto uppercase tracking-wider ${lang === "en" ? "justify-start text-left" : "justify-end text-right"}`}>
