@@ -391,25 +391,22 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ config, lang, onSave, 
     setLocalConfig((prev) => ({ ...prev, testimonials: (prev.testimonials || []).filter((t) => t.id !== id) }));
   };
 
-  // 🔥 THE CLOUDINARY MEDIA UPLOAD LOGIC (ULTRA FAST) 🔥
+  // 🔥 الكود النهائي الصارم لرفع الصور (بيمنع حفظ أي نص عملاق في الفايربيز) 🔥
   const compressConfigImages = async (configData: CompanyConfig): Promise<CompanyConfig> => {
     const next = { ...configData };
 
     const handleImageUpload = async (imgUrl: string | undefined, width: number, height: number, pathPrefix: string) => {
       if (!imgUrl) return imgUrl;
-      // لو الصورة أصلاً عبارة عن رابط إنترنت، مفيش داعي نرفعها تاني
+      // لو الصورة أصلاً رابط إنترنت (قديمة)، مفيش داعي نرفعها تاني
       if (!imgUrl.startsWith("data:image")) return imgUrl;
 
       try {
-        // نضغط الصورة الأول باستخدام الكود القديم لتقليل الحجم
         const compressedBase64 = await compressBase64(imgUrl, width, height, 0.75);
         
         const formData = new FormData();
-        // Cloudinary بيقبل الصورة كاملة بصيغة Data URI
         formData.append("file", compressedBase64);
         formData.append("upload_preset", "ml_default");
 
-        // رفع الصورة المباشر على سيرفرات Cloudinary السريعة جداً
         const uploadRes = await fetch("https://api.cloudinary.com/v1_1/dgvcqy3vt/image/upload", {
             method: "POST",
             body: formData
@@ -418,42 +415,47 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ config, lang, onSave, 
         const imgData = await uploadRes.json();
 
         if (imgData.secure_url) {
-            return imgData.secure_url; // نرجع بالرابط المباشر السريع للصورة
+            return imgData.secure_url;
         } else {
-            console.error("Cloudinary Upload Error:", imgData);
-            // في حالة فشل الرفع لأي سبب، نرجع الصورة كنص مضغوط كحل بديل عشان الموقع ميوقفش
-            return compressedBase64;
+            // لو Cloudinary رفض الصورة، هننبهك فوراً ومش هنرجع النص العملاق أبداً
+            console.error(`Cloudinary Error for ${pathPrefix}:`, imgData);
+            alert(`⚠️ تم رفض صورة (${pathPrefix}) من سيرفر الصور. السبب: ${imgData.error?.message || 'تأكد من إعدادات Cloudinary (Unsigned)'}`);
+            return ""; // ده اللي هيحمي الفايربيز من إنه يضرب تاني
         }
       } catch (error) {
-        console.error("Network Error:", error);
-        return await compressBase64(imgUrl, width, height, 0.75);
+        console.error(`Network Error for ${pathPrefix}:`, error);
+        alert(`⚠️ مشكلة في الإنترنت أثناء رفع صورة (${pathPrefix}).`);
+        return ""; // ده اللي هيحمي الفايربيز
       }
     };
 
-    next.logoUrl = await handleImageUpload(next.logoUrl, 400, 320, 'logo') || "";
-    next.aboutMediaUrl = await handleImageUpload(next.aboutMediaUrl, 800, 600, 'about') || "";
+    // معالجة اللوجو وصورة عن الشركة
+    next.logoUrl = await handleImageUpload(next.logoUrl, 400, 320, 'Logo') || "";
+    next.aboutMediaUrl = await handleImageUpload(next.aboutMediaUrl, 800, 600, 'AboutImage') || "";
 
+    // معالجة صور الأزرار
     if (next.buttons) {
       next.buttons = { ...next.buttons };
       if (next.buttons.contacts && next.buttons.contacts.imageUrl) {
-        next.buttons.contacts.imageUrl = await handleImageUpload(next.buttons.contacts.imageUrl, 350, 250, 'btn_contacts') || "";
+        next.buttons.contacts.imageUrl = await handleImageUpload(next.buttons.contacts.imageUrl, 350, 250, 'Button1') || "";
       }
       if (next.buttons.branches && next.buttons.branches.imageUrl) {
-        next.buttons.branches.imageUrl = await handleImageUpload(next.buttons.branches.imageUrl, 350, 250, 'btn_branches') || "";
+        next.buttons.branches.imageUrl = await handleImageUpload(next.buttons.branches.imageUrl, 350, 250, 'Button2') || "";
       }
       if (next.buttons.social && next.buttons.social.imageUrl) {
-        next.buttons.social.imageUrl = await handleImageUpload(next.buttons.social.imageUrl, 350, 250, 'btn_social') || "";
+        next.buttons.social.imageUrl = await handleImageUpload(next.buttons.social.imageUrl, 350, 250, 'Button3') || "";
       }
       if (next.buttons.midea && next.buttons.midea.imageUrl) {
-        next.buttons.midea.imageUrl = await handleImageUpload(next.buttons.midea.imageUrl, 350, 250, 'btn_midea') || "";
+        next.buttons.midea.imageUrl = await handleImageUpload(next.buttons.midea.imageUrl, 350, 250, 'Button4') || "";
       }
     }
 
+    // معالجة صور الماركات
     if (next.brands && next.brands.length > 0) {
       next.brands = await Promise.all(
         next.brands.map(async (brand) => {
           if (brand.logoUrl) {
-            const url = await handleImageUpload(brand.logoUrl, 200, 120, 'brand');
+            const url = await handleImageUpload(brand.logoUrl, 200, 120, `Brand-${brand.name}`);
             return { ...brand, logoUrl: url || "" };
           }
           return brand;
@@ -461,11 +463,12 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ config, lang, onSave, 
       );
     }
 
+    // معالجة صور العروض
     if (next.offers && next.offers.length > 0) {
       next.offers = await Promise.all(
         next.offers.map(async (offer) => {
           if (offer.imageUrl) {
-            const url = await handleImageUpload(offer.imageUrl, 600, 450, 'offer');
+            const url = await handleImageUpload(offer.imageUrl, 600, 450, `Offer-${offer.titleEn}`);
             return { ...offer, imageUrl: url || "" };
           }
           return offer;
@@ -473,11 +476,12 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ config, lang, onSave, 
       );
     }
 
+    // معالجة صور آراء العملاء
     if (next.testimonials && next.testimonials.length > 0) {
       next.testimonials = await Promise.all(
         next.testimonials.map(async (testimonial) => {
           if (testimonial.imageUrl) {
-            const url = await handleImageUpload(testimonial.imageUrl, 128, 128, 'testi');
+            const url = await handleImageUpload(testimonial.imageUrl, 128, 128, `Testimonial-${testimonial.authorNameEn}`);
             return { ...testimonial, imageUrl: url || "" };
           }
           return testimonial;
@@ -501,8 +505,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ config, lang, onSave, 
     } catch (err: any) {
       console.error("Save error: ", err);
       let errMsgFriendly = lang === "ar"
-        ? "فشل في حفظ البيانات. يرجى التحقق من اتصالك بالإنترنت."
-        : "Failed to save configuration. Please verify your internet connection.";
+        ? "فشل في حفظ البيانات. يرجى التأكد من مسح النصوص الطويلة (Base64) من الفايربيز أولاً."
+        : "Failed to save configuration. Please clean up Firebase data.";
       setErrorMsg(errMsgFriendly);
     } finally {
       setIsSaving(false);
