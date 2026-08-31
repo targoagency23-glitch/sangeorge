@@ -54,7 +54,6 @@ export default function App() {
     return true;
   });
 
-  // Persistent language local locale: "ar" or "en"
   const [lang, setLang] = useState<"en" | "ar">(() => {
     try {
       const stored = localStorage.getItem("sangeorge_co_lang");
@@ -62,22 +61,15 @@ export default function App() {
         return stored;
       }
     } catch (_) {}
-    return "ar"; // default to Arabic as requested first ("عربي و انجليزي")
+    return "ar"; 
   });
 
-  // Dual View controller state: "client" or "admin"
   const [viewMode, setViewMode] = useState<"client" | "admin">("client");
-
-  // Dialog triggers state
   const [isAdminAuthOpen, setIsAdminAuthOpen] = useState(false);
   const [activeClientModal, setActiveClientModal] = useState<"contacts" | "branches" | "social" | "midea" | null>(null);
-
-  // Carousel slider state for testimonials
   const [currentTestiIndex, setCurrentTestiIndex] = useState(0);
 
-  // Connection and live configuration sync from Firestore
   useEffect(() => {
-    // 1. Test database connection as required by rules
     const verifyConnection = async () => {
       try {
         await getDocFromServer(doc(db, "configs", "sangeorge_co"));
@@ -89,13 +81,11 @@ export default function App() {
     };
     verifyConnection();
 
-    // 2. Attach real-time listener to configs document
     const configDocRef = doc(db, "configs", "sangeorge_co");
     const unsubscribe = onSnapshot(configDocRef, async (snapshot) => {
       if (snapshot.exists()) {
         const remoteData = snapshot.data() as CompanyConfig;
         
-        // Ensure brand records compatibility or migration if raw arrays exist
         if (remoteData.brands && remoteData.brands.length > 0) {
           remoteData.brands = remoteData.brands.map((b: any, idx) => {
             if (typeof b === "string") {
@@ -112,7 +102,6 @@ export default function App() {
           });
         }
 
-        // Self-healing migration for San George Google Maps shortlink
         let isUpdated = false;
         if (!remoteData.mideaMapUrl || remoteData.mideaMapUrl.includes("Port%20Said")) {
           remoteData.mideaMapUrl = "https://maps.app.goo.gl/U1keM2jD4mAEKZrk7";
@@ -138,9 +127,7 @@ export default function App() {
         setConfig(remoteData);
         setLoading(false);
       } else {
-        // Cold start bootstrap: write template defaults to DB so app starts with valid layout
         try {
-          // Check if there was local data we can bootstrap
           let initialConfig = DEFAULT_COMPANY_CONFIG;
           const stored = localStorage.getItem("sangeorge_co_config");
           if (stored) {
@@ -164,19 +151,16 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  // Sync back to local storage when configurations change as a reliable offline offline fallback
   useEffect(() => {
     if (!loading) {
       localStorage.setItem("sangeorge_co_config", JSON.stringify(config));
     }
   }, [config, loading]);
 
-  // Keep language state sync
   useEffect(() => {
     localStorage.setItem("sangeorge_co_lang", lang);
   }, [lang]);
 
-  // Handle successful Admin unlocked authentication
   const handleAdminUnlocked = () => {
     setIsAdminAuthOpen(false);
     setViewMode("admin");
@@ -194,7 +178,6 @@ export default function App() {
     }
   };
 
-  // Render Admin Workspace view
   if (viewMode === "admin") {
     return (
       <AdminPortal
@@ -217,7 +200,6 @@ export default function App() {
     );
   }
 
-  // Full screen elegant pulsing loading component
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center font-sans">
@@ -236,18 +218,15 @@ export default function App() {
     );
   }
 
-  // Else, render the highly polished, client-facing Suez Landing Page with dynamic direction
   return (
     <div 
       className="min-h-screen bg-white text-neutral-800 font-sans flex flex-col antialiased selection:bg-[#172995]/10 selection:text-[#172995]"
       dir={lang === "ar" ? "rtl" : "ltr"}
     >
       
-      {/* 1. HEADER BRAND BAR */}
       <header className="sticky top-0 z-45 bg-white/95 backdrop-blur-md border-b border-gray-100 py-4 px-4 md:px-10">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           
-          {/* Brand Logo & Suez tags */}
           <div className="flex items-center gap-4">
             {config.logoUrl ? (
               <div className="flex items-center justify-center shrink-0 h-16 min-w-[110px] bg-white p-2 rounded-lg">
@@ -257,17 +236,14 @@ export default function App() {
                   className="max-h-12 max-w-[180px] object-contain bg-white"
                   referrerPolicy="no-referrer"
                   onError={(e) => {
-                    // Fallback to text representation or hide
                     (e.target as HTMLElement).style.display = 'none';
                   }}
                 />
               </div>
             ) : null}
             
-            {/* Fallback elegant, corporate modern rectangular logo with 4 combined shapes */}
             {!config.logoUrl && (
               <div className="flex items-center gap-3 px-1 py-1 shrink-0 h-16">
-                {/* 4 combined shapes/stripes of Suez trade */}
                 <div className="flex items-center gap-2">
                   <div className="w-2.5 h-9 bg-[#172995] rounded-xs font-bold shrink-0"></div>
                   <div className="w-2.5 h-9 bg-red-600 rounded-xs shrink-0"></div>
@@ -279,11 +255,8 @@ export default function App() {
                 </span>
               </div>
             )}
- 
-
           </div>
 
-          {/* Sleek Navigation Menu links */}
           <nav className="hidden lg:flex items-center gap-8 text-sm font-medium text-slate-600">
             <a href="#" className="text-[#172995] font-semibold hover:opacity-90 transition">
               {lang === "en" ? "Home" : "الرئيسية"}
@@ -295,16 +268,13 @@ export default function App() {
               {lang === "en" ? "Global Partners" : "الوكالات العالمية"}
             </a>
             
-            {/* Suez channel badge */}
             <div className={`inline-flex items-center gap-1.5 bg-[#172995]/5 px-3 py-1 rounded-full border border-gray-150 text-[#172995] text-[11px] font-semibold ${lang === "ar" ? "font-Cairo" : "font-sans font-bold"}`}>
               <span className="w-1.5 h-1.5 bg-[#172995] rounded-full animate-pulse"></span>
               <span>{lang === "en" ? "Suez Certified Member" : "عضو معتمد بالسويس"}</span>
             </div>
           </nav>
 
-          {/* Action buttons bar */}
           <div className="flex items-center gap-3">
-            {/* Beautiful Multi-Language Switcher */}
             <div className="flex items-center bg-gray-100 hover:bg-gray-200/50 p-0.5 rounded-full transition-all border border-gray-200/50">
               <button
                 onClick={() => setLang("en")}
@@ -328,7 +298,6 @@ export default function App() {
               </button>
             </div>
 
-            {/* Admin toggle button */}
             <button
               onClick={() => setIsAdminAuthOpen(true)}
               className="flex items-center gap-2 px-3.5 py-1.5 md:px-4 md:py-2 rounded-full bg-gray-50 border border-gray-200 text-[#172995] hover:bg-gray-100 font-bold text-xs transition-all duration-200 cursor-pointer shadow-3xs"
@@ -342,13 +311,10 @@ export default function App() {
         </div>
       </header>
 
-      {/* 2. MAIN SECTION LANDING WRAPPERS */}
       <main className="flex-grow bg-[#FCFDFE]">
         
-        {/* HERO SECTION CONTAINER */}
         <section id="about-section-view" className="max-w-7xl mx-auto px-4 md:px-10 py-12 md:py-20 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
           
-          {/* Dynamic Narrative Left Column */}
           <div className="lg:col-span-12 lg:col-span-7 space-y-8">
             
             <span className="inline-block px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] bg-[#172995]/10 text-[#172995] rounded-lg">
@@ -367,7 +333,6 @@ export default function App() {
               </p>
             </div>
 
-            {/* CONNECTIVITY MODULE: Beautiful Custom Sleek Cards Grid Layout */}
             <div className="pt-6 space-y-5">
               <h4 className="text-[10px] uppercase font-bold tracking-[0.2em] text-[#172995]/75 flex items-center gap-3">
                 <span>{lang === "en" ? "Enterprise Connectivity Solutions" : "حلول اتصال التوريدات والتوكيلات"}</span>
@@ -376,8 +341,8 @@ export default function App() {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-                {/* Branches Panel Portlet - NOW SAMSUNG */}
-                {config.buttons.branches.visible && (
+                {/* 📍 SAMSUNG BUTTON */}
+                {config.buttons?.branches?.visible && (
                   <button
                     onClick={() => setActiveClientModal("branches")}
                     className="group relative w-full h-[175px] rounded-2xl overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 select-none cursor-pointer border border-gray-100"
@@ -396,11 +361,13 @@ export default function App() {
                         </div>
                         <div className="w-full">
                           <h5 className={`font-bold text-slate-950 text-base ${lang === "en" ? "text-left font-display" : "text-right font-Cairo"}`}>
-                            {lang === "en" ? "Samsung" : "سامسونج"}
+                            {lang === "en" ? config.buttons.branches.labelEn : config.buttons.branches.labelAr}
                           </h5>
-                          {/* 🔥 التعديل هنا: سحب المواعيد الديناميكية لسامسونج 🔥 */}
+                          {/* 🔥 سحب المواعيد لسامسونج بذكاء 🔥 */}
                           <span className={`block text-[11px] text-slate-400 font-medium mt-0.5 mb-4 ${lang === "en" ? "text-left font-sans" : "text-right font-Cairo"}`}>
-                            {lang === "en" ? (config.samsungWorkingHoursEn || "Phone • Location • Social handles") : (config.samsungWorkingHoursAr || "الرقم • الموقع • وسائل التواصل")}
+                            {lang === "en" 
+                              ? (config.samsungWorkingHoursEn || config.samsungBranches?.[0]?.timingEn || "Phone • Location • Social handles") 
+                              : (config.samsungWorkingHoursAr || config.samsungBranches?.[0]?.timingAr || "الرقم • الموقع • وسائل التواصل")}
                           </span>
                         </div>
                         <span className={`text-xs font-bold text-[#172995] flex items-center gap-1.5 mt-auto uppercase tracking-wider ${lang === "en" ? "justify-start text-left" : "justify-end text-right"}`}>
@@ -412,8 +379,8 @@ export default function App() {
                   </button>
                 )}
 
-                {/* Social Hub Panel Portlet - NOW BEKO */}
-                {config.buttons.social.visible && (
+                {/* 📍 BEKO BUTTON */}
+                {config.buttons?.social?.visible && (
                   <button
                     onClick={() => setActiveClientModal("social")}
                     className="group relative w-full h-[175px] rounded-2xl overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 select-none cursor-pointer border border-gray-100"
@@ -432,11 +399,13 @@ export default function App() {
                         </div>
                         <div className="w-full">
                           <h5 className={`font-bold text-slate-950 text-base ${lang === "en" ? "text-left font-display" : "text-right font-Cairo"}`}>
-                            {lang === "en" ? "Beko" : "بيكو"}
+                            {lang === "en" ? config.buttons.social.labelEn : config.buttons.social.labelAr}
                           </h5>
-                          {/* 🔥 التعديل هنا: سحب المواعيد الديناميكية لبيكو 🔥 */}
+                          {/* 🔥 سحب المواعيد لبيكو بذكاء 🔥 */}
                           <span className={`block text-[11px] text-slate-400 font-medium mt-0.5 mb-2 ${lang === "en" ? "text-left font-sans" : "text-right font-Cairo"}`}>
-                            {lang === "en" ? (config.bekoWorkingHoursEn || "Phone • Location • Social handles") : (config.bekoWorkingHoursAr || "الرقم • الموقع • وسائل التواصل")}
+                            {lang === "en" 
+                              ? (config.bekoWorkingHoursEn || config.bekoBranches?.[0]?.timingEn || "Phone • Location • Social handles") 
+                              : (config.bekoWorkingHoursAr || config.bekoBranches?.[0]?.timingAr || "الرقم • الموقع • وسائل التواصل")}
                           </span>
                         </div>
                         <span className={`text-xs font-bold text-[#172995] flex items-center gap-1.5 mt-auto uppercase tracking-wider ${lang === "en" ? "justify-start text-left" : "justify-end text-right"}`}>
@@ -448,8 +417,8 @@ export default function App() {
                   </button>
                 )}
 
-                {/* Midea Panel Portlet - NEW */}
-                {(config.buttons.midea?.visible ?? true) && (
+                {/* 📍 SAN GEORGE BUTTON */}
+                {(config.buttons?.midea?.visible ?? true) && (
                   <button
                     onClick={() => setActiveClientModal("midea")}
                     className="group relative w-full h-[175px] rounded-2xl overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 select-none cursor-pointer border border-gray-100"
@@ -457,7 +426,7 @@ export default function App() {
                     {config.buttons.midea?.imageUrl ? (
                       <img 
                         src={config.buttons.midea.imageUrl} 
-                        alt="Midea" 
+                        alt="San George" 
                         className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
                         referrerPolicy="no-referrer"
                       />
@@ -470,9 +439,11 @@ export default function App() {
                           <h5 className={`font-bold text-slate-950 text-base ${lang === "en" ? "text-left font-display" : "text-right font-Cairo"}`}>
                             {lang === "en" ? (config.buttons.midea?.labelEn || "San George") : (config.buttons.midea?.labelAr || "سان جورج")}
                           </h5>
-                          {/* 🔥 التعديل هنا: سحب المواعيد الديناميكية لسان جورج 🔥 */}
+                          {/* 🔥 سحب المواعيد لسان جورج بذكاء 🔥 */}
                           <span className={`block text-[11px] text-slate-400 font-medium mt-0.5 mb-2 ${lang === "en" ? "text-left font-sans" : "text-right font-Cairo"}`}>
-                            {lang === "en" ? (config.mideaWorkingHoursEn || "Phone • Location • Social handles") : (config.mideaWorkingHoursAr || "الرقم • الموقع • وسائل التواصل")}
+                            {lang === "en" 
+                              ? (config.mideaWorkingHoursEn || config.mideaBranches?.[0]?.timingEn || "Phone • Location • Social handles") 
+                              : (config.mideaWorkingHoursAr || config.mideaBranches?.[0]?.timingAr || "الرقم • الموقع • وسائل التواصل")}
                           </span>
                         </div>
                         <span className={`text-xs font-bold text-[#172995] flex items-center gap-1.5 mt-auto uppercase tracking-wider ${lang === "en" ? "justify-start text-left" : "justify-end text-right"}`}>
@@ -487,10 +458,8 @@ export default function App() {
             </div>
           </div>
 
-          {/* Dynamic Media Slot Right Column */}
           <div className="lg:col-span-12 lg:col-start-8 lg:col-span-5 flex justify-center">
             <div className="relative w-full max-w-md lg:max-w-none">
-              {/* Sleek rotated background card */}
               <div className="absolute -inset-4 bg-[#172995]/5 rounded-3xl -rotate-2"></div>
               
               <div className="relative aspect-[4/3.3] w-full rounded-2xl overflow-hidden shadow-2xl border-4 border-white bg-slate-100">
@@ -501,7 +470,6 @@ export default function App() {
                   referrerPolicy="no-referrer"
                 />
                 
-                {/* Visual Arabic & English overlay tags */}
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent p-5 text-white flex flex-col justify-end" dir="ltr">
                   <span className="text-[10px] tracking-widest uppercase font-bold text-white/70">
                     {lang === "en" ? "Suez Home Appliances & Showrooms" : "معارض الأجهزة الكهربائية المعتمدة بالسويس"}
@@ -516,7 +484,6 @@ export default function App() {
 
         </section>
 
-        {/* 3.5 SPECIAL DEALS & OFFERS BOARD */}
         {config.offers && config.offers.length > 0 && (
           <section id="offers-deals-section" className="max-w-7xl mx-auto px-4 md:px-10 py-12 md:py-16">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-10 border-b border-gray-100 pb-5">
@@ -547,7 +514,6 @@ export default function App() {
                     className="group bg-white border border-gray-100 hover:border-emerald-600/20 rounded-3xl overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 flex flex-col justify-between"
                   >
                     <div className="relative">
-                      {/* Badge representation overlay */}
                       {(offer.badgeAr || offer.badgeEn) && (
                         <div className={`absolute top-4 ${lang === "ar" ? "right-4" : "left-4"} z-10 bg-emerald-600 text-white text-[11px] font-bold px-3 py-1 rounded-full shadow-md flex items-center gap-1`}>
                           <Percent className="w-3 h-3" />
@@ -584,7 +550,6 @@ export default function App() {
                         </p>
                       </div>
 
-                      {/* Direct Call & Whatsapp actionable triggers */}
                       <div className="grid grid-cols-2 gap-3 pt-4 border-t border-gray-100" dir={lang === "ar" ? "rtl" : "ltr"}>
                         {callNumber && (
                           <a
@@ -621,12 +586,10 @@ export default function App() {
           </section>
         )}
 
-        {/* 3.6 CLIENT TESTIMONIALS CAROUSEL SECTION */}
         {config.testimonials && config.testimonials.length > 0 && (
           <section id="testimonials-carousel-section" className="bg-gradient-to-b from-white to-slate-50 py-16 md:py-24 border-t border-b border-slate-100 overflow-hidden">
             <div className="max-w-4xl mx-auto px-4 md:px-6 relative">
               
-              {/* Section Header */}
               <div className="text-center max-w-xl mx-auto mb-12">
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-full uppercase tracking-wider mb-3">
                   <Sparkles className="w-3.5 h-3.5" />
@@ -642,7 +605,6 @@ export default function App() {
                 </p>
               </div>
 
-              {/* Slider Wrapper */}
               <div className="relative">
                 <AnimatePresence mode="wait">
                   <motion.div
@@ -653,26 +615,22 @@ export default function App() {
                     transition={{ duration: 0.35, ease: "easeInOut" }}
                     className="bg-white rounded-3xl border border-slate-100 p-8 md:p-12 shadow-md hover:shadow-lg transition-shadow relative"
                   >
-                    {/* Big Quote Accent decoration */}
                     <div className={`absolute top-6 ${lang === "ar" ? "left-6" : "right-6"} text-indigo-500/10`}>
                       <Quote className="w-16 h-16 transform scale-x-[-1]" />
                     </div>
 
                     <div className="flex flex-col items-center text-center space-y-6 relative z-10">
                       
-                      {/* Rating Stars */}
                       <div className="flex gap-0.5 text-amber-400">
                         {Array.from({ length: config.testimonials[currentTestiIndex]?.rating || 5 }).map((_, idx) => (
                           <Star key={idx} className="w-4.5 h-4.5 fill-current" />
                         ))}
                       </div>
 
-                      {/* Decisive feedback statement */}
                       <blockquote className={`text-sm md:text-base text-slate-700 leading-relaxed max-w-2xl font-medium italic ${lang === "ar" ? "font-Cairo" : ""}`}>
                         "{lang === "en" ? config.testimonials[currentTestiIndex]?.feedbackEn : config.testimonials[currentTestiIndex]?.feedbackAr}"
                       </blockquote>
 
-                      {/* Author Details Card */}
                       <div className="flex flex-col items-center">
                         {config.testimonials[currentTestiIndex]?.imageUrl ? (
                           <img
@@ -698,10 +656,8 @@ export default function App() {
                   </motion.div>
                 </AnimatePresence>
 
-                {/* Slider Pagination Controls Arrow Buttons */}
                 <div className="flex items-center justify-between mt-8 relative" dir="ltr">
                   
-                  {/* Left / Prev Arrow Button */}
                   <button
                     onClick={() => {
                       if (!config.testimonials || config.testimonials.length === 0) return;
@@ -713,7 +669,6 @@ export default function App() {
                     <ChevronLeft className="w-5 h-5" />
                   </button>
 
-                  {/* Dynamic Indicators / Pagination Dots */}
                   <div className="flex gap-1.5">
                     {config.testimonials.map((_, idx) => (
                       <button
@@ -729,7 +684,6 @@ export default function App() {
                     ))}
                   </div>
 
-                  {/* Right / Next Arrow Button */}
                   <button
                     onClick={() => {
                       if (!config.testimonials || config.testimonials.length === 0) return;
@@ -749,14 +703,12 @@ export default function App() {
           </section>
         )}
 
-        {/* 3. BRANDS BRAND Ticker */}
         <section className="relative">
           <BrandMarquee brands={config.brands} lang={lang} />
         </section>
 
       </main>
 
-      {/* 4. FOOTER CREDITS */}
       <footer className="bg-neutral-50 border-t border-neutral-100 py-10 px-4 md:px-8 text-center shrink-0">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 font-sans text-xs text-neutral-400 font-medium">
           <p className="tracking-tight">
@@ -769,10 +721,7 @@ export default function App() {
           </p>
         </div>
       </footer>
-
-      {/* --- OVERLAY POPUPS MODALS BLOCK --- */}
       
-      {/* 2. Samsung Master Modal */}
       <SimpleModal
         isOpen={activeClientModal === "branches"}
         onClose={() => setActiveClientModal(null)}
@@ -783,7 +732,6 @@ export default function App() {
         <SamsungUnifiedContent config={config} lang={lang} />
       </SimpleModal>
 
-      {/* 3. Beko Master Modal */}
       <SimpleModal
         isOpen={activeClientModal === "social"}
         onClose={() => setActiveClientModal(null)}
@@ -794,7 +742,6 @@ export default function App() {
         <BekoUnifiedContent config={config} lang={lang} />
       </SimpleModal>
 
-      {/* 4. Midea Master Modal */}
       <SimpleModal
         isOpen={activeClientModal === "midea"}
         onClose={() => setActiveClientModal(null)}
@@ -805,7 +752,6 @@ export default function App() {
         <MideaUnifiedContent config={config} lang={lang} />
       </SimpleModal>
 
-      {/* 4. Admin Auth Gate Passcode popup */}
       <AdminPassModal
         isOpen={isAdminAuthOpen}
         onClose={() => setIsAdminAuthOpen(false)}
