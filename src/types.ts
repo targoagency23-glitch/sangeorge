@@ -30,6 +30,15 @@ export interface CompanyConfig {
   aboutTextEn: string;
   aboutTextAr: string;
   aboutMediaUrl: string; // Warehouse/store photo/video URL
+  samsungWorkingHoursAr?: string;
+  samsungWorkingHoursEn?: string;
+  bekoWorkingHoursAr?: string;
+  bekoWorkingHoursEn?: string;
+  mideaWorkingHoursAr?: string;
+  mideaWorkingHoursEn?: string;
+  samsungWebsiteUrl?: string;
+  bekoWebsiteUrl?: string;
+  mideaWebsiteUrl?: string;
   
   // Custom button toggles
   buttons: {
